@@ -104,6 +104,8 @@ under_color: "#ff2d6b"   # LEDs and separators
 
 ## ❓ FAQ
 
+**Which languages are supported?** English and French. The editor and the card texts follow your Home Assistant language: French if it is French, English otherwise. Reload the page after changing the language.
+
 **The WebGL clock stays blank.** Your browser has no WebGL. Use `nixie-clock-card`, which needs none.
 
 **Some cards go blank on my Android phone.** Android WebViews keep at most 8 WebGL contexts per page and drop the oldest one. This card uses one and gives it back when it leaves the page. If you run many WebGL cards on one view, use `nixie-clock-card` on some of them.

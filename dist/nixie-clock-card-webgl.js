@@ -723,6 +723,55 @@ class NixieClockCardWebgl extends HTMLElement {
  *  Ajouts propres a cette card : _range (recopie de neon-dual-gauge-card,
  *  + defaut affiche quand la cle est absente) et _group (ha-expansion-panel).
  * ═══════════════════════════════════════════════════════════════════ */
+/* ── i18n FR/EN : la clé est la chaîne française (le français s'affiche tel quel) ── */
+let _lang = 'en';
+const _EN = {
+ "Acrylique du socle": "Base acrylic",
+ "Afficher Glitch": "Show Glitch",
+ "Animation": "Animation",
+ "Blancheur du cœur": "Core whiteness",
+ "Cathodes éteintes": "Unlit cathodes",
+ "Chaque réglage fait apparaître Glitch tout de suite dans l'aperçu.": "Each setting makes Glitch appear immediately in the preview.",
+ "Couleur": "Colour",
+ "Cœur blanc des LED": "White LED core",
+ "Durée d'apparition (ms)": "Appearance duration (ms)",
+ "Décalage horizontal": "Horizontal offset",
+ "Décalage vertical": "Vertical offset",
+ "Fondu des chiffres (ms)": "Digit fade (ms)",
+ "Glitch le chat": "Glitch the cat",
+ "Halo du gaz": "Gas glow",
+ "Hauteur de la LED": "LED height",
+ "Horloge": "Clock",
+ "Intervalle moyen (s)": "Average interval (s)",
+ "LED (pieds + séparateurs)": "LED (feet + separators)",
+ "LED séparateurs": "Separator LEDs",
+ "Masquer les secondes": "Hide seconds",
+ "Opacité": "Opacity",
+ "Portée du halo (px)": "Glow reach (px)",
+ "Reflet du verre": "Glass reflection",
+ "Remettre un curseur sur sa valeur d'origine retire la clé du YAML.": "Setting a slider back to its original value removes the key from the YAML.",
+ "Rendu (réglé au banc le 25/09)": "Rendering (tuned on the bench 25/09)",
+ "Rétroéclairage LED": "LED backlight",
+ "Scintillement": "Flicker",
+ "Scintillement du chiffre": "Digit flicker",
+ "Scintillement du chiffre à 0 : le chiffre reste fixe, seul le halo respire.": "Digit flicker at 0: the digit stays steady, only the glow breathes.",
+ "Sur le séparateur n°": "On separator no.",
+ "Taille": "Size",
+ "Vide = couleur d'accent du thème.": "Empty = theme accent colour.",
+ "Vide = même couleur que les LED.": "Empty = same colour as the LEDs.",
+ "ex: #FF3366 / rgb(var(--rgb-lavande)) / var(--primary-color)": "e.g. #FF3366 / rgb(var(--rgb-lavande)) / var(--primary-color)"
+};
+const _t = (fr) => {
+  if (_lang === 'fr' || fr == null || fr === '') return fr;
+  const k = String(fr).replace(/\s+/g, ' ').trim();
+  return _EN[k] ?? fr;
+};
+const _setLang = (h) => {
+  const l = /^fr/i.test(String(h?.locale?.language || h?.language || '')) ? 'fr' : 'en';
+  if (l === _lang) return false;
+  _lang = l; return true;
+};
+
 class NixieClockCardWebglEditor extends HTMLElement {
   constructor() { super(); this._config = {}; this._hass = null; this._rendered = false; }
 
@@ -732,7 +781,7 @@ class NixieClockCardWebglEditor extends HTMLElement {
     if (!this._rendered) { this._rendered = true; this._render(); }
     else this._syncValues();
   }
-  set hass(h) { this._hass = h; this._fillDatalists(); }   // JAMAIS de render ici
+  set hass(h) { this._hass = h; if (_setLang(h) && this._rendered) this._render(); this._fillDatalists(); }   // JAMAIS de render ici
   disconnectedCallback() { this._rendered = false; }
 
   // ── Lecture / écriture config (clés imbriquées via ".") ────────────
@@ -780,14 +829,14 @@ class NixieClockCardWebglEditor extends HTMLElement {
   }
 
   // ── Helpers de champ (signatures FIXES — ne pas réinventer) ────────
-  _section(t) { const d = document.createElement('div'); d.className = 'sec'; d.textContent = t; (this._appendTo || this).appendChild(d); return d; }
-  _hint(t)    { const d = document.createElement('div'); d.className = 'hint'; d.textContent = t; (this._appendTo || this).appendChild(d); return d; }
+  _section(t) { const d = document.createElement('div'); d.className = 'sec'; d.textContent = _t(t); (this._appendTo || this).appendChild(d); return d; }
+  _hint(t)    { const d = document.createElement('div'); d.className = 'hint'; d.textContent = _t(t); (this._appendTo || this).appendChild(d); return d; }
 
   _number(key, label, { min, max, step = 1, ph = '' } = {}) {
     const row = this._row(label);
     const inp = document.createElement('input');
     inp.type = 'number'; if (min != null) inp.min = min; if (max != null) inp.max = max;
-    inp.step = step; inp.placeholder = ph; inp.dataset.key = key;
+    inp.step = step; inp.placeholder = _t(ph); inp.dataset.key = key;
     inp.value = this._read(key) ?? '';
     inp.addEventListener('input', () => { const n = parseFloat(inp.value); this._set(key, isNaN(n) ? undefined : n); });
     row.wrap.appendChild(inp); return inp;
@@ -828,7 +877,7 @@ class NixieClockCardWebglEditor extends HTMLElement {
   _color(key, label, cssDefault = null, ph = 'ex: #FF3366 / rgb(var(--rgb-lavande)) / var(--primary-color)') {
     const row = this._row(label);
     const box = document.createElement('div'); box.className = 'color-row';
-    const txt = document.createElement('input'); txt.type = 'text'; txt.placeholder = ph; txt.dataset.key = key;
+    const txt = document.createElement('input'); txt.type = 'text'; txt.placeholder = _t(ph); txt.dataset.key = key;
     txt.value = this._read(key) ?? '';
     const pick = document.createElement('input'); pick.type = 'color';
     txt._pick = pick; txt._cssDefault = cssDefault;          // mémorisé pour _syncValues
@@ -853,7 +902,7 @@ class NixieClockCardWebglEditor extends HTMLElement {
   _group(title, expanded, buildFn) {
     const panel = document.createElement('ha-expansion-panel');
     panel.outlined = true;
-    panel.header = title;
+    panel.header = _t(title);
     if (expanded) panel.expanded = true;
     (this._appendTo || this).appendChild(panel);
     const prevAppendTo = this._appendTo;
@@ -867,7 +916,7 @@ class NixieClockCardWebglEditor extends HTMLElement {
   _row(labelHtml, isHtml = false) {
     const row = document.createElement('div'); row.className = 'row';
     const lbl = document.createElement('label');
-    if (isHtml) lbl.innerHTML = labelHtml; else lbl.textContent = labelHtml;
+    if (isHtml) lbl.innerHTML = labelHtml; else lbl.textContent = _t(labelHtml);
     const wrap = document.createElement('div'); wrap.className = 'field-wrap';
     row.appendChild(lbl); row.appendChild(wrap); (this._appendTo || this).appendChild(row);
     return { row, wrap };
