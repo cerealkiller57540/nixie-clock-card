@@ -11,7 +11,7 @@
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=cerealkiller57540&repository=nixie-clock-card&category=plugin)
 
-<img src="https://raw.githubusercontent.com/cerealkiller57540/nixie-clock-card/main/images/main.gif" alt="Nixie Clock Card: six glass tubes with orange glowing digits and cyan LEDs at their feet" width="600">
+<img src="https://raw.githubusercontent.com/cerealkiller57540/nixie-clock-card/main/images/main.webp" alt="Nixie Clock Card: six glass tubes with orange glowing digits and cyan LEDs at their feet" width="600">
 
 </div>
 
