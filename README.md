@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🕐 Nixie Clock Card
+<img src="https://raw.githubusercontent.com/cerealkiller57540/nixie-clock-card/main/images/logo.png" alt="Nixie Clock Card" width="480">
 
 **A nixie tube clock for Home Assistant: six IN-14 tubes with glowing gas, cyan underlights and an acrylic base, rendered in WebGL.**
 
