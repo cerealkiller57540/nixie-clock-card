@@ -1,11 +1,11 @@
 /*
  * ============================================================
- *  NixieClockCardWebgl — Home Assistant Custom Card  v1.4.1
+ *  NixieClockCardWebgl — Home Assistant Custom Card  v1.4.2
  *  Usage: add to resources as /local/nixie-clock-card-webgl.js
  * ============================================================
  *
  *  Variante WebGL de nixie-clock-card, dessinee d'apres la vraie horloge
- *  nixie de l'auteur (6 tubes IN-14 separes, chiffres orange, LED cyan au pied
+ *  nixie (6 tubes IN-14 separes, chiffres orange, LED cyan au pied
  *  de chaque tube, barrettes a 2 points LED, socle acrylique noir).
  *
  *  Minimal config:
@@ -18,7 +18,7 @@
  *    hide_seconds: false         # 4 tubes au lieu de 6 (default: false)
  *    under_color: "var(--accent-color)"   # LED des pieds + separateurs (default: accent du theme)
  *
- *    # -- rendu (valeurs reglees a l'oeil au banc d'essai le 25/09/2026) --
+ *    # -- rendu (defauts ajustes visuellement) --
  *    glow:     1.20   # intensite du halo orange
  *    glow_r:   10.0   # rayon du halo, px
  *    core:     0.35   # coeur du trait qui tire vers le jaune-blanc
@@ -33,7 +33,7 @@
  *    base_refl: 0.75  # arete et degrade de l'acrylique du socle
  *    sep_core: 1.20   # point blanc brulant au centre des LED des separateurs
  *
- *    # -- GLITCH le chat : perche sur la barrette d'un separateur (l'auteur, 25/09) --
+ *    # -- GLITCH le chat : perche sur la barrette d'un separateur --
  *    glitch: true
  *    glitch_size: 30              # px pour une card de 355 px de large : suit la card
  *    glitch_sep: 2                # separateur (1 = gauche, 2 = droite ; 1 seul en 4 tubes)
@@ -64,19 +64,18 @@
 (function(){
 'use strict';
 
-const NCW_VERSION = '1.4.1';
+const NCW_VERSION = '1.4.2';
 const NCW_TAG = 'nixie-clock-card-webgl';
 
 const NCW_IS_IPAD = /iPad/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const NCW_IS_LOW_POWER = NCW_IS_IPAD || /iPhone|iPad|iPod|Android|Mobile|HomeAssistant/i.test(navigator.userAgent);
 
-// Espace logique du dessin (px CSS au banc) : le shader travaille dans ce repere,
+// Espace logique du dessin (px CSS) : le shader travaille dans ce repere,
 // le canvas reel n'en est qu'une mise a l'echelle.
 const NCW_W = 355, NCW_H = 110;
 
-// Valeurs reglees a l'oeil au banc d'essai (ha-card-preview-bench, 25/09/2026) :
-// ne pas les rechoisir au juge.
+// Constantes ajustees visuellement : ne pas les modifier sans reverifier le rendu.
 const NCW_DEF = { glow:1.20, glow_r:10.0, core:0.35, flicker:0.26, ghost:0.12,
                   fade:180, under:1.00, under_h:0.45, glass:0.35, sep:1.05,
                   flk_core:0.00, base_refl:0.75, sep_core:1.20 };
@@ -121,8 +120,8 @@ const FS_BLUR = `precision highp float;
     gl_FragColor = vec4(acc / wsum, 1.);
   }`;
 
-// Cathodes eteintes : les 10 chiffres empiles, cuits UNE fois (au banc c'etait
-// 10 lectures de texture par pixel de chiffre, a chaque image).
+// Cathodes eteintes : les 10 chiffres empiles, cuits UNE fois (sinon 10 lectures
+// de texture par pixel de chiffre, a chaque image).
 const FS_GHOST = `precision highp float;
   varying vec2 v; uniform sampler2D uSheet;` + GLSL_CELL + `
   void main(){
@@ -236,7 +235,7 @@ const FS = `precision highp float;
   }`;
 
 /* Layout en px logiques : T T S T T S T T (ou T T S T T sans les secondes).
-   Tubes elargis puis chiffres agrandis au banc (25/09) : ne pas retoucher sans l'auteur. */
+   Proportions ajustees visuellement : ne pas les modifier sans reverifier le rendu. */
 function ncwLayout(n){
   const g = 0.08, g2 = 0.18, sw = 0.40;
   const nSep = n > 4 ? 2 : 1;
@@ -315,8 +314,8 @@ class NixieClockCardWebgl extends HTMLElement {
 
   /* v1.4.1 — détachée, la card LIBÈRE son contexte (recopie de linux-terminal-card-webgl).
    * HA garde en mémoire les anciennes instances quand il reconstruit la vue (reprise
-   * de l'app) : mesuré au banc plafond 8, leurs contextes restaient vivants et
-   * poussaient la page au-delà de 8. Le rattachement reconstruit tout
+   * de l'app) : leurs contextes restaient vivants et poussaient la page au-delà du
+   * plafond de 8 contextes WebGL. Le rattachement reconstruit tout
    * (connectedCallback -> _build), chiffres posés directement (_first). */
   disconnectedCallback(){ if (this._built) this._teardown(); }
 
@@ -386,9 +385,8 @@ class NixieClockCardWebgl extends HTMLElement {
   }
 
   /* v1.4.1 — vider le shadowRoot SAUF le <card-mod> que le thème (card-mod-card) y a posé à la
-   * création de la card : card-mod ne le remet pas quand la card se reconstruit. Mesuré au banc :
-   * après un détacher/rattacher, plus de liserés ni d'overflow du thème, fond en aplat bleu nuit
-   * (défaut déjà présent en prod sur les chemins _teardown, rendu fréquent par le détachement).
+   * création de la card : card-mod ne le remet pas quand la card se reconstruit (sinon, après
+   * un détacher/rattacher : plus de liserés ni d'overflow du thème, fond en aplat).
    * Renvoie ce <card-mod> (ou null) : _build insère ses nœuds AVANT lui, ordre d'origine gardé. */
   _clearShadow(){
     const sr = this.shadowRoot;
@@ -652,7 +650,7 @@ class NixieClockCardWebgl extends HTMLElement {
     if (cfg.glitch === false) return;
     // Perche sur la barrette d'un separateur, DANS la card : en debord (right:-26, top:-40
     // d'origine) la vue le tronquait ; au centre il flottait sur les chiffres ; sur un dome
-    // il fallait reserver 58 px vides au-dessus (l'auteur a choisi ce placement sur image, 25/09).
+    // il fallait reserver 58 px vides au-dessus.
     // Taille en px logiques (card de 355 px) -> en % de la largeur : il suit la card.
     const L = this._L;
     const gx = Number(cfg.glitch_x) || 0, gy = Number(cfg.glitch_y) || 0;
@@ -750,7 +748,7 @@ const _EN = {
  "Portée du halo (px)": "Glow reach (px)",
  "Reflet du verre": "Glass reflection",
  "Remettre un curseur sur sa valeur d'origine retire la clé du YAML.": "Setting a slider back to its original value removes the key from the YAML.",
- "Rendu (réglé au banc le 25/09)": "Rendering (tuned on the bench 25/09)",
+ "Rendu": "Rendering",
  "Rétroéclairage LED": "LED backlight",
  "Scintillement": "Flicker",
  "Scintillement du chiffre": "Digit flicker",
@@ -972,7 +970,7 @@ class NixieClockCardWebglEditor extends HTMLElement {
     this._color('under_color', 'LED (pieds + séparateurs)', 'var(--accent-color, #00fff9)');
     this._hint('Vide = couleur d\'accent du thème.');
 
-    this._group('Rendu (réglé au banc le 25/09)', false, () => {
+    this._group('Rendu', false, () => {
       this._range('glow',    'Halo du gaz',          { min: 0,   max: 3,   step: 0.05, def: D.glow });
       this._range('glow_r',  'Portée du halo (px)',  { min: 2,   max: 30,  step: 0.5,  def: D.glow_r });
       this._range('core',    'Blancheur du cœur',    { min: 0,   max: 1,   step: 0.02, def: D.core });
