@@ -1,6 +1,6 @@
 /*
  * ============================================================
- *  NixieClockCardWebgl — Home Assistant Custom Card  v1.4.2
+ *  NixieClockCardWebgl — Home Assistant Custom Card  v1.5.3
  *  Usage: add to resources as /local/nixie-clock-card-webgl.js
  * ============================================================
  *
@@ -64,7 +64,7 @@
 (function(){
 'use strict';
 
-const NCW_VERSION = '1.4.2';
+const NCW_VERSION = '1.5.3';
 const NCW_TAG = 'nixie-clock-card-webgl';
 
 const NCW_IS_IPAD = /iPad/.test(navigator.userAgent) ||
@@ -934,21 +934,22 @@ class NixieClockCardWebglEditor extends HTMLElement {
   _css() {
     return `
       :host { display:block; padding:14px; font-family:var(--primary-font-family,Roboto,sans-serif); }
-      .sec { font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--primary-color);margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--divider-color); }
+      nixie-clock-card-webgl-editor { --ned-label:color-mix(in srgb,var(--primary-text-color) 82%,transparent);--ned-dim:color-mix(in srgb,var(--primary-text-color) 60%,transparent);--ned-accent:color-mix(in srgb,var(--primary-color) 55%,var(--primary-text-color));--ned-line:color-mix(in srgb,var(--primary-color) 55%,transparent); }
+      .sec { font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ned-accent);margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--ned-line); }
       .sec:first-child { margin-top:0; }
       .row { display:flex;align-items:center;gap:8px;margin-bottom:6px; }
-      .row label { flex:0 0 160px;font-size:12px;color:var(--secondary-text-color); }
+      .row label { flex:0 0 160px;font-size:12px;color:var(--ned-label); }
       .field-wrap { flex:1;min-width:0;display:flex; }
-      input[type=text],input[type=number],select { flex:1;width:100%;padding:4px 8px;border:1px solid var(--divider-color);border-radius:4px;background:var(--card-background-color);color:var(--primary-text-color);font-size:12px;outline:none;box-sizing:border-box; }
+      input[type=text],input[type=number],select { flex:1;width:100%;padding:4px 8px;border:1px solid var(--ned-line);border-radius:4px;background:var(--card-background-color);color:var(--primary-text-color);font-size:12px;outline:none;box-sizing:border-box; }
       input:focus,select:focus { box-shadow:0 0 0 1px var(--primary-color); }
       .color-row { display:flex;gap:8px;flex:1; }
       .color-row input[type=text] { flex:1; }
       .color-row input[type=color] { width:36px;height:28px;flex:none;padding:0;border:none;background:none;border-radius:4px;cursor:pointer; }
       .range-row { display:flex;gap:8px;flex:1;align-items:center; }
       .range-row input[type=range] { flex:1;min-width:0;accent-color:var(--primary-color); }
-      .range-row .range-val { flex:none;width:36px;text-align:right;font-size:11px;color:var(--secondary-text-color); }
-      .hint { font-size:11px;color:var(--secondary-text-color);font-style:italic;margin:-2px 0 6px 168px; }
-      ha-expansion-panel { display:block;margin:10px 0; }
+      .range-row .range-val { flex:none;width:36px;text-align:right;font-size:11px;color:var(--ned-label); }
+      .hint { font-size:11px;color:var(--ned-dim);font-style:italic;margin:-2px 0 6px 168px; }
+      nixie-clock-card-webgl-editor ha-expansion-panel { display:block;margin:10px 0;--outline-color:var(--ned-line);--expansion-panel-summary-padding:0 12px;color:var(--primary-text-color); }
       ha-expansion-panel .row:first-child { margin-top:8px; }
     `;
   }

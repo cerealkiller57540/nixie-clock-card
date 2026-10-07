@@ -460,7 +460,7 @@ if (!window.customCards.some(c => c.type === 'nixie-clock-card')) {
 }
 
 console.info(
-  '%c 🕐 nixie-clock-card v1.0 %c Neo Tokyo ',
+  '%c 🕐 nixie-clock-card v1.5.3 %c Neo Tokyo ',
   'background:#FF6A00;color:#000;padding:2px 4px;border-radius:3px 0 0 3px;font-weight:bold;',
   'background:#040811;color:#FFD700;padding:2px 4px;border-radius:0 3px 3px 0;'
 );
