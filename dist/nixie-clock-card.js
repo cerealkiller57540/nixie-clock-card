@@ -1,6 +1,6 @@
 /*
  * ============================================================
- *  NixieClockCardWebgl — Home Assistant Custom Card  v1.6.0
+ *  NixieClockCardWebgl — Home Assistant Custom Card  v1.6.1
  *  Usage: add to resources as /local/nixie-clock-card-webgl.js
  * ============================================================
  *
@@ -64,7 +64,7 @@
 (function(){
 'use strict';
 
-const NCW_VERSION = '1.6.0';
+const NCW_VERSION = '1.6.1';
 const NCW_TAG = 'nixie-clock-card-webgl';
 
 const NCW_IS_IPAD = /iPad/.test(navigator.userAgent) ||
@@ -267,6 +267,7 @@ class NixieClockCardWebgl extends HTMLElement {
 
   static getStubConfig(){ return { use_military: true, hide_seconds: false }; }
   static getConfigElement(){ return document.createElement(NCW_TAG + '-editor'); }
+  getGridOptions() { return { columns: 12, min_columns: 3 }; }
   getCardSize(){ return 2; }
 
   setConfig(config){
