@@ -1,6 +1,6 @@
 /*
  * ============================================================
- *  NixieClockCardWebgl — Home Assistant Custom Card  v1.6.1
+ *  NixieClockCardWebgl — Home Assistant Custom Card  v1.6.2
  *  Usage: add to resources as /local/nixie-clock-card-webgl.js
  * ============================================================
  *
@@ -64,7 +64,12 @@
 (function(){
 'use strict';
 
-const NCW_VERSION = '1.6.1';
+const NCW_VERSION = '1.6.2';
+
+function _ncwSafeColor(v, fb) {
+  const s = String(v ?? '').trim();
+  return s && !/[;{}"'<>\\]/.test(s) ? s : (fb || '');
+}
 const NCW_TAG = 'nixie-clock-card-webgl';
 
 const NCW_IS_IPAD = /iPad/.test(navigator.userAgent) ||
@@ -284,7 +289,7 @@ class NixieClockCardWebgl extends HTMLElement {
     this._military = config.use_military != null ? !!config.use_military : true;
     const prevNT = this._nT;
     this._nT = config.hide_seconds ? 4 : 6;
-    this._underCss = config.under_color || 'var(--accent-color, #00fff9)';
+    this._underCss = _ncwSafeColor(config.under_color) || 'var(--accent-color, #00fff9)';
     const gk = Object.keys(config).filter(k => k.startsWith('glitch')).sort()
       .map(k => k + '=' + config[k]).join('|') + '|' + this._underCss;
     if (this._built && prevNT === this._nT){
@@ -659,7 +664,7 @@ class NixieClockCardWebgl extends HTMLElement {
     const feet = L.top + (L.bot - L.top) * 0.26;            // haut de la barrette (cf FS : top + H*0.26)
     // borne : les oreilles ne sortent jamais du haut de la card (4 tubes = dessin plus etroit)
     const size = Math.max(10, Math.min(33, feet, Number(cfg.glitch_size) || 30));
-    const color = cfg.glitch_color || this._underCss;
+    const color = _ncwSafeColor(cfg.glitch_color) || this._underCss;
     const g = document.createElement('div');
     g.style.cssText = 'position:absolute;pointer-events:none;z-index:6;opacity:0;'
       + 'width:' + (size / NCW_W * 100) + '%;aspect-ratio:1;'
