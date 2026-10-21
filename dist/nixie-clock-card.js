@@ -1,6 +1,6 @@
 /*
  * ============================================================
- *  NixieClockCardWebgl — Home Assistant Custom Card  v1.6.2
+ *  NixieClockCardWebgl — Home Assistant Custom Card  v1.7.2
  *  Usage: add to resources as /local/nixie-clock-card-webgl.js
  * ============================================================
  *
@@ -64,7 +64,7 @@
 (function(){
 'use strict';
 
-const NCW_VERSION = '1.6.2';
+const NCW_VERSION = '1.7.2';
 
 function _ncwSafeColor(v, fb) {
   const s = String(v ?? '').trim();
@@ -176,12 +176,23 @@ const FS = `precision highp float;
       else d = max(dx - hw, px.y - uBot);
       float tip = max(abs(px.x - uTX[i]) - uTW * 0.08, abs(px.y - (uTop - uTW * 0.05)) - uTW * 0.09);
       float inTube = 1.0 - smoothstep(-0.6, 0.6, d);
-      float inTip  = 1.0 - smoothstep(-0.5, 0.5, tip);
+      // pointe : bouton de verre (evasement, col etroit, renflement, bout arrondi)
+      float nbTy = (uTop - px.y) / uTW / 1.500;
+      float nbTx = abs(px.x - uTX[i]) / uTW / 1.500;
+      float nbW = nbTy < 0.165 ? mix(0.060, 0.024, clamp(nbTy / 0.165, 0., 1.)) + 0.020 * exp(-max(nbTy, 0.) / 0.03)
+                : 0.024 * sqrt(max(1. - pow((nbTy - 0.165) / 0.024, 2.), 0.));
+      float nbE = (nbTx - nbW) * uTW * 1.500;
+      float inTip = (1.0 - smoothstep(-0.6, 0.6, nbE)) * smoothstep(-0.05, 0.01, nbTy)
+                  * (1.0 - smoothstep(-0.5, 0.5, (nbTy - 0.19) * uTW * 1.500));
+
 
       float dw = uTW * 0.84, dh = dw / 0.62;
       float dcy = uTop + H * 0.56;
       vec2 duv = vec2((px.x - (uTX[i] - dw * 0.5)) / dw, (px.y - (dcy - dh * 0.5)) / dh);
-      float inDigit = step(0., duv.x) * step(duv.x, 1.) * step(0., duv.y) * step(duv.y, 1.);
+      vec2 duv0 = duv;
+      // refraction : le tube agit en lentille cylindrique, le chiffre est lu plus pres du centre vers les bords
+      duv.x = 0.5 + (duv.x - 0.5) * (1.0 - 0.150 * min(lx * lx, 1.0) * inTube);
+      float inDigit = step(0., duv0.x) * step(duv0.x, 1.) * step(0., duv.y) * step(duv.y, 1.);
       float m = uMix[i];
       if (inDigit > 0.5){
         vec3 lit = mix(cell(uSheet, uPrev[i], duv), cell(uSheet, uCur[i], duv), m);
@@ -190,7 +201,7 @@ const FS = `precision highp float;
       }
       vec2 huv = clamp(duv, 0., 1.);
       vec3 halo = mix(cell(uHalo, uPrev[i], huv), cell(uHalo, uCur[i], huv), m);
-      float hfall = inDigit > 0.5 ? 1.0 : exp(-length(max(abs(duv - 0.5) - 0.5, 0.) * vec2(dw, dh)) / max(uGlowR, 1.));
+      float hfall = inDigit > 0.5 ? 1.0 : exp(-length(max(abs(duv0 - 0.5) - 0.5, 0.) * vec2(dw, dh)) / max(uGlowR, 1.));
       col += gas(halo) * uGlow * hfall * fl * 1.4;
 
       float ax = clamp(abs(lx), 0., 1.);
@@ -202,7 +213,57 @@ const FS = `precision highp float;
       col += uCyan * uUnder * 0.9 * inTip * exp(-(uTop - px.y + uTW * 0.2) / 6.0) * 0.2;
       col += vec3(0.85, 0.95, 1.0) * uGlass * (0.35 * rim + 0.5 * fres
              + 0.55 * exp(-pow((lx + 0.62) / 0.07, 2.)) * inTube * smoothstep(uTop, uTop + H * 0.3, px.y)
-             + 0.6 * inTip) * (0.35 + 0.65 * (1.0 - hy));
+             + 0.0 * inTip) * (0.35 + 0.65 * (1.0 - hy));
+      vec3 gl0 = col;
+
+      { // trainee dure + glint cote droit + liseré net
+        float tr = exp(-pow((lx + 0.68) / 0.035, 2.)) * inTube
+                 * smoothstep(0.08, 0.2, hy) * (1.0 - smoothstep(0.55, 0.76, hy));
+        col += vec3(0.95, 0.98, 1.0) * tr * 2.000;
+        float sg = exp(-pow((lx - 0.70) / 0.05, 2.)) * inTube
+                 * smoothstep(0.10, 0.22, hy) * (1.0 - smoothstep(0.34, 0.52, hy));
+        col += vec3(0.85, 0.95, 1.0) * sg * 0.0;
+        float ed = exp(-abs(d + 0.7) / 0.5) * inTube * (0.35 + 0.65 * (1.0 - hy));
+        col += vec3(0.9, 0.97, 1.0) * ed * 0.800;
+      }
+      { // coupole : reflets qui suivent la sphere
+        float dex = (px.x - uTX[i]) / hw;
+        float dey = (yDome - px.y) / hw;
+        float dm = (1.0 - smoothstep(yDome - 1.5, yDome + 1.5, px.y) * 0.0) * step(px.y, yDome + 1.0) * inTube * smoothstep(0.0, 0.22, dey);
+        float dr = length(vec2(dex, dey));
+        float tt = atan(max(dey, 0.0), dex) / 3.14159265;
+        // trainee verticale prolongee en arc, pleine au raccord puis qui s'eteint vers le sommet
+        float wl = smoothstep(0.50, 0.80, tt);
+        float arcL = exp(-pow((dr - 0.68) / 0.040, 2.)) * wl;
+        col += vec3(0.95, 0.98, 1.0) * arcL * dm * 1.000;
+        // glint cote droit, court
+        float wr = 1.0 - smoothstep(0.04, 0.26, tt);
+        float arcR = exp(-pow((dr - 0.70) / 0.050, 2.)) * wr;
+        col += vec3(0.85, 0.95, 1.0) * arcR * dm * 1.000 * 0.7;
+        // eclat specular dur, ovale allonge le long de la tangente
+        vec2 sp = vec2(dex + 0.36, dey - 0.62);
+        float spec = exp(-(sp.x * sp.x / 0.010 + sp.y * sp.y / 0.0035));
+        col += vec3(1.0) * spec * dm * 1.000 * 1.6;
+                // 2e paroi (epaisseur du verre) + voile de gloss haut-gauche
+        float shell = exp(-pow((dr - 0.86) / 0.045, 2.)) * (0.35 + 0.65 * smoothstep(0.3, 1.0, tt));
+        col += vec3(0.80, 0.93, 1.0) * shell * dm * 1.000 * 0.45;
+        float gloss = exp(-length(vec2(dex + 0.30, dey - 0.55)) / 0.40) * (1.0 - smoothstep(0.80, 0.95, dr));
+        col += vec3(0.70, 0.88, 1.0) * gloss * dm * 1.000 * 0.10;
+
+      }
+      { // pointe : liseré, voile, eclat de bulbe, filet de col, point de sommet
+        float rimN = exp(-abs(nbE + 0.5) / 0.450) * inTip * smoothstep(-0.01, 0.04, nbTy);
+        col += vec3(0.9, 0.97, 1.0) * rimN * 0.900 * 0.9;
+        col += vec3(0.55, 0.85, 1.0) * inTip * 0.900 * 0.050;
+        float sx = (px.x - uTX[i]) / uTW / 1.500;
+        vec2 g = vec2(sx + 0.020, nbTy - 0.085);
+        col += vec3(1.0) * exp(-(g.x * g.x / 0.0004 + g.y * g.y / 0.003)) * inTip * 0.900 * 1.5;
+        col += vec3(0.95, 0.98, 1.0) * exp(-pow((sx + nbW * 0.55) / 0.008, 2.)) * smoothstep(0.015, 0.05, nbTy)
+             * (1.0 - smoothstep(0.11, 0.16, nbTy)) * inTip * 0.900 * 0.6;
+        vec2 g2 = vec2(sx - 0.003, nbTy - 0.160);
+        col += vec3(1.0) * exp(-(g2.x * g2.x / 0.00015 + g2.y * g2.y / 0.0004)) * inTip * 0.900 * 0.9;
+      }
+      col = gl0 + (col - gl0) * (uGlass / 0.35);
       col += uCyan * uUnder * 0.9 * exp(-pow(lx / 1.1, 2.)) * exp(-abs(px.y - uBot) / 3.0);
     }
 
