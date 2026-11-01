@@ -101,6 +101,10 @@ The nixie tube digit images embedded in both cards are **© 2007-08 Cestmir Hybl
 
 ## 🌃 More neon cards
 
+## 🧱 How this repository is built
+
+`dist/nixie-clock-card.js` is the file HACS installs. It is built from the version running on the author's own Home Assistant: personal defaults are replaced with neutral ones, the version number is stamped, and the build stops if a local IP address or a token is found. That working copy is not published; bugs and suggestions are welcome as issues.
+
 This card is part of a family. See the full collection at [**Home-Assistant-Neon-Cards**](https://github.com/cerealkiller57540/Home-Assistant-Neon-Cards).
 
 ---
