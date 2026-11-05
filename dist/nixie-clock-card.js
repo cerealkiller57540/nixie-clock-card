@@ -1,6 +1,6 @@
 /*
  * ============================================================
- *  NixieClockCardWebgl — Home Assistant Custom Card  v1.7.2
+ *  NixieClockCardWebgl — Home Assistant Custom Card  v1.7.3
  *  Usage: add to resources as /local/nixie-clock-card-webgl.js
  * ============================================================
  *
@@ -64,7 +64,7 @@
 (function(){
 'use strict';
 
-const NCW_VERSION = '1.7.2';
+const NCW_VERSION = '1.7.3';
 
 function _ncwSafeColor(v, fb) {
   const s = String(v ?? '').trim();
